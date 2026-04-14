@@ -22,7 +22,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	// 正则表达式,用于校验
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}`
+		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,72}$`
 	)
 
 	emailExp := regexp2.MustCompile(emailRegexPattern, 0)
@@ -80,13 +80,13 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	//调用 svc 的方法
+	//调用 svc 的方法进行数据库操作
 	err = user.svc.SignUp(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统错误(该邮箱已经注册)")
 		return
 	}
 
