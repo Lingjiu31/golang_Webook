@@ -2,9 +2,18 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
+)
+
+// 唯一索引冲突错误 1062
+const uniqueConflictsErrNo uint16 = 1062
+
+var (
+	ErrUserDuplicateEmail = errors.New("邮箱冲突")
 )
 
 type UserDAO struct {
@@ -22,7 +31,17 @@ func (dao *UserDAO) Insert(cxt context.Context, user User) error {
 	now := time.Now().UnixMilli()
 	user.Utime = now
 	user.Ctime = now
-	return dao.db.WithContext(cxt).Create(&user).Error
+	// 数据库操作
+	err := dao.db.WithContext(cxt).Create(&user).Error
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		// 检验是否为数据库错误 并且查看是否为邮箱冲突错误
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == uniqueConflictsErrNo {
+			// 邮箱冲突
+			return ErrUserDuplicateEmail
+		}
+	}
+	return err
 }
 
 // User 对应数据库表结构

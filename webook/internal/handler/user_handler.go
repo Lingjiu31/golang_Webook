@@ -3,6 +3,7 @@ package handler
 import (
 	"Project-WeBook/webook/internal/domain"
 	"Project-WeBook/webook/internal/service"
+	"errors"
 	"net/http"
 
 	"github.com/dlclark/regexp2"
@@ -85,8 +86,12 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
+	if errors.Is(err, service.ErrUserDuplicateEmail) {
+		ctx.String(http.StatusOK, "该邮箱已注册")
+		return
+	}
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误(该邮箱已经注册)")
+		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
 

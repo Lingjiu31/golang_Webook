@@ -6,6 +6,8 @@ import (
 	"context"
 )
 
+var ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+
 type UserRepository struct {
 	dao *dao.UserDAO
 }
@@ -22,8 +24,4 @@ func (r *UserRepository) Create(cxt context.Context, user domain.User) error {
 		Email:    user.Email,
 		Password: user.Password,
 	})
-}
-
-func (r *UserRepository) FindById(int64) {
-
 }
