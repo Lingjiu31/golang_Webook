@@ -20,7 +20,7 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	}
 }
 
-func (svc *UserService) SignUp(cxt context.Context, user domain.User) error {
+func (svc *UserService) SignUp(ctx context.Context, user domain.User) error {
 	//加密
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -28,5 +28,5 @@ func (svc *UserService) SignUp(cxt context.Context, user domain.User) error {
 	}
 	user.Password = string(hash)
 
-	return svc.repo.Create(cxt, user)
+	return svc.repo.Create(ctx, user)
 }

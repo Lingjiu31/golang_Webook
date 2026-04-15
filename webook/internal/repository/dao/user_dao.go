@@ -27,12 +27,12 @@ func NewUserDAO(db *gorm.DB) *UserDAO {
 }
 
 // Insert 记录时间, 并且使用 grom 录入数据库
-func (dao *UserDAO) Insert(cxt context.Context, user User) error {
+func (dao *UserDAO) Insert(ctx context.Context, user User) error {
 	now := time.Now().UnixMilli()
 	user.Utime = now
 	user.Ctime = now
 	// 数据库操作
-	err := dao.db.WithContext(cxt).Create(&user).Error
+	err := dao.db.WithContext(ctx).Create(&user).Error
 	if err != nil {
 		var mysqlErr *mysql.MySQLError
 		// 检验是否为数据库错误 并且查看是否为邮箱冲突错误
