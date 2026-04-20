@@ -55,7 +55,7 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 	// 邮箱校验
 	ok, err := user.emailExp.MatchString(req.Email)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统错误(注册邮箱校验)")
 		return
 	}
 
@@ -72,7 +72,7 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 
 	ok, err = user.passwordExp.MatchString(req.Password)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统错误(注册密码校验)")
 		return
 	}
 
@@ -91,7 +91,7 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统错误(注册信息数据库存储)")
 		return
 	}
 
@@ -122,7 +122,7 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "系统错误(密码校验)")
 		return
 	}
 
