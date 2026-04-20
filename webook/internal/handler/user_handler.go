@@ -131,7 +131,11 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	// 可以随便设置在session中的值
 	session.Set("userId", u.Id)
-	session.Save()
+	err = session.Save()
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误(save session)")
+		return
+	}
 	ctx.String(http.StatusOK, "登录成功")
 	return
 }
