@@ -128,10 +128,10 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 
 	// 登录成功
 	// 设置 session
-	sess := sessions.Default(ctx)
+	session := sessions.Default(ctx)
 	// 可以随便设置在session中的值
-	sess.Set("userId", u.Id)
-	sess.Save()
+	session.Set("userId", u.Id)
+	session.Save()
 	ctx.String(http.StatusOK, "登录成功")
 	return
 }
@@ -143,5 +143,5 @@ func (user *UserHandler) Edit(ctx *gin.Context) {
 
 // ProFile 用户信息
 func (user *UserHandler) ProFile(ctx *gin.Context) {
-
+	ctx.String(http.StatusOK, "你已经登录这是Profile")
 }

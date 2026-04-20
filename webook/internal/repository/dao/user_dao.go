@@ -55,13 +55,12 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 
 // User 对应数据库表结构
 type User struct {
-	Id int64 `gorm:"primary_key,autoIncrement"`
-	// 全部用户唯一
-	Email    string `gorm:"unique"`
+	Id       int64  `gorm:"primary_key,autoIncrement"` // 主键id
+	Email    string `gorm:"unique"`                    // 全部用户唯一
 	Password string
 
-	//创建时间,毫秒
+	// 创建时间, 毫秒
 	Ctime int64
-	//更新时间,毫秒
+	// 更新时间, 毫秒
 	Utime int64
 }
