@@ -12,6 +12,10 @@ func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 
 	server.Use(middleware.CORSMiddleware())
 
+	server.Use(middleware.SessionMiddleware())
+
+	server.Use(middleware.NewLoginMiddlewareBuilder().Build())
+
 	ug := server.Group("/users")
 
 	//注册

@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/dlclark/regexp2"
-
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -113,7 +113,7 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	}
 
 	// 校验密码
-	err := user.svc.Login(ctx, domain.User{
+	u, err := user.svc.Login(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -127,6 +127,11 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	}
 
 	// 登录成功
+	// 设置 session
+	sess := sessions.Default(ctx)
+	// 可以随便设置在session中的值
+	sess.Set("userId", u.Id)
+	sess.Save()
 	ctx.String(http.StatusOK, "登录成功")
 	return
 }
