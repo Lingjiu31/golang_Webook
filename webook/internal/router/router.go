@@ -9,12 +9,12 @@ import (
 
 func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 	server := gin.Default()
-
 	server.Use(middleware.CORSMiddleware())
-
 	server.Use(middleware.SessionMiddleware())
-
-	server.Use(middleware.NewLoginMiddlewareBuilder().Build())
+	server.Use(middleware.NewLoginMiddlewareBuilder().
+		IgnorePaths("/users/signup").
+		IgnorePaths("/users/login").
+		Build())
 
 	ug := server.Group("/users")
 
