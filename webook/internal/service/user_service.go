@@ -51,5 +51,27 @@ func (svc *UserService) Login(ctx context.Context, user domain.User) (domain.Use
 	if err != nil {
 		return domain.User{}, ErrInvalidUserOrPassword
 	}
-	return user, nil
+	return domain.User{
+		Id:       dbUser.Id,
+		Email:    dbUser.Email,
+		Password: dbUser.Password,
+	}, nil
+}
+
+func (svc *UserService) Edit(ctx context.Context, user domain.User) error {
+
+	return svc.repo.Edit(ctx, user)
+}
+
+func (svc *UserService) GetProfile(ctx context.Context, id int64) (domain.User, error) {
+	user, err := svc.repo.FindById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return domain.User{
+		Name:      user.Name,
+		Email:     user.Email,
+		Birthday:  user.Birthday,
+		Biography: user.Biography,
+	}, nil
 }

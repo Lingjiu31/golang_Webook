@@ -24,15 +24,18 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,72}$`
+		birthdayRegexPattern = `^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$`
 	)
 
 	emailExp := regexp2.MustCompile(emailRegexPattern, 0)
 	passwordExp := regexp2.MustCompile(passwordRegexPattern, 0)
+	birthdayExp := regexp2.MustCompile(birthdayRegexPattern, 0)
 
 	return &UserHandler{
 		svc:         svc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
+		birthdayExp: birthdayExp,
 	}
 }
 
@@ -142,10 +145,80 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 
 // Edit 编辑
 func (user *UserHandler) Edit(ctx *gin.Context) {
+	type EditReq struct {
+		Name      string `json:"name"`
+		Birthday  string `json:"birthday"`
+		Biography string `json:"biography"`
+	}
+	var req EditReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
 
+	// 昵称长度校验
+	if len(req.Name) >= 16 {
+		ctx.String(http.StatusOK, "昵称过长(不要超过16个字节)")
+		return
+	}
+
+	// 生日格式校验
+	ok, err := user.birthdayExp.MatchString(req.Birthday)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误(生日校验)")
+		return
+	}
+	if !ok {
+		ctx.String(http.StatusOK, "生日格式为(xxxx-xx-xx)")
+		return
+	}
+
+	// 个人简介长度校验
+	if len(req.Biography) >= 80 {
+		ctx.String(http.StatusOK, "简介过长(不要超过80个字节)")
+		return
+	}
+
+	// 更新数据库
+	session := sessions.Default(ctx)
+	id := session.Get("userId")
+	uid := id.(int64)
+	err = user.svc.Edit(ctx, domain.User{
+		Id:        uid,
+		Name:      req.Name,
+		Birthday:  req.Birthday,
+		Biography: req.Biography,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	ctx.String(http.StatusOK, "修改成功")
 }
 
 // ProFile 用户信息
 func (user *UserHandler) ProFile(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "你已经登录这是Profile")
+
+	// 查看 id 对应个人信息
+	session := sessions.Default(ctx)
+	id := (session.Get("userId")).(int64)
+	u, err := user.svc.GetProfile(ctx, id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	type User struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+		Birth string `json:"birth"`
+		Bio   string `json:"bio"`
+	}
+	ctx.JSON(http.StatusOK, User{
+		Name:  u.Name,
+		Email: u.Email,
+		Birth: u.Birthday,
+		Bio:   u.Biography,
+	})
+
 }

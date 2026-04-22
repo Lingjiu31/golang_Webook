@@ -53,12 +53,36 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return user, err
 }
 
+// UpDateUser 更新个人信息
+func (dao *UserDAO) UpDateUser(ctx context.Context, user User) error {
+	now := time.Now().UnixMilli()
+
+	u := User{
+		Name:      user.Name,
+		Birthday:  user.Birthday,
+		Biography: user.Biography,
+		Utime:     now,
+	}
+	// 数据库操作
+	return dao.db.WithContext(ctx).Model(&User{}).Where("id = ?", user.Id).Updates(&u).Error
+}
+
+// FindByID 查找个人信息
+func (dao *UserDAO) FindByID(ctx context.Context, id int64) (User, error) {
+	var user User
+	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
+	return user, err
+}
+
 // User 对应数据库表结构
 type User struct {
 	Id       int64  `gorm:"primary_key,autoIncrement"` // 主键id
 	Email    string `gorm:"unique"`                    // 全部用户唯一
 	Password string
 
+	Name      string
+	Birthday  string
+	Biography string
 	// 创建时间, 毫秒
 	Ctime int64
 	// 更新时间, 毫秒
