@@ -22,15 +22,17 @@ func (l *LoginMiddlewareBuilder) IgnorePaths(path string) *LoginMiddlewareBuilde
 
 func (l *LoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// 无需登录地址
 		for _, path := range l.paths {
 			if ctx.Request.RequestURI == path {
 				return
 			}
 		}
+
 		session := sessions.Default(ctx)
 		id := session.Get("userId")
 		if id == nil {
-			//未登录
+			// 未登录
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
