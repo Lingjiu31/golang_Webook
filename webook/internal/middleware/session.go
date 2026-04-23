@@ -11,7 +11,7 @@ func SessionMiddleware() gin.HandlerFunc {
 	store, err := redis.NewStore(16, "tcp",
 		"localhost:6379", "", "",
 		[]byte("h9X2&kL#vR6wP*zY4nM1jT8fQ5sC7aE9"),
-		[]byte("h9X2&kL#vR6wP*zY4nM1jT8fQ5sC7aE9"))
+		[]byte("7sB#2kQ!9zR$5mG&1dF@8cV%3jH^6*N"))
 	if err != nil {
 		panic(err)
 	}
