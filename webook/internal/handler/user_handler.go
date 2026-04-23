@@ -132,8 +132,15 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	// 登录成功
 	// 设置 session
 	session := sessions.Default(ctx)
-	// 可以随便设置在session中的值
+	// 设置在 session 中的值
 	session.Set("userId", u.Id)
+	// cookie 安全属性
+	session.Options(sessions.Options{
+		// 仅 https 传输(生产环境用)
+		//Secure: true,
+		// 仅 http 传输
+		//HttpOnly: true,
+	})
 	err = session.Save()
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误(save session)")
@@ -141,6 +148,20 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	}
 	ctx.String(http.StatusOK, "登录成功")
 	return
+}
+
+// Logout 登出
+func (user *UserHandler) Logout(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	session.Options(sessions.Options{
+		MaxAge: -1,
+	})
+	err := session.Save()
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误(save session)")
+		return
+	}
+	ctx.String(http.StatusOK, "已退出登录")
 }
 
 // Edit 编辑

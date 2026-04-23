@@ -24,6 +24,9 @@ func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 	//登录
 	ug.POST("/login", u.Login)
 
+	//登出
+	ug.POST("/logout", u.Logout)
+
 	//编辑
 	ug.POST("/edit", u.Edit)
 
