@@ -137,9 +137,10 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 	// cookie 安全属性
 	session.Options(sessions.Options{
 		// 仅 https 传输(生产环境用)
-		//Secure: true,
+		Secure: true,
 		// 仅 http 传输
-		//HttpOnly: true,
+		HttpOnly: true,
+		MaxAge:   60,
 	})
 	err = session.Save()
 	if err != nil {
