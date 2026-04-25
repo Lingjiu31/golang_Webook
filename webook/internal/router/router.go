@@ -10,8 +10,12 @@ import (
 func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
-	server.Use(middleware.SessionMiddleware())
-	server.Use(middleware.NewLoginMiddlewareBuilder().
+	//server.Use(middleware.SessionMiddleware())
+	//server.Use(middleware.NewLoginMiddlewareBuilder().
+	//	IgnorePaths("/users/signup").
+	//	IgnorePaths("/users/login").
+	//	Build())
+	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
 		IgnorePaths("/users/signup").
 		IgnorePaths("/users/login").
 		Build())
@@ -22,7 +26,7 @@ func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 	ug.POST("/signup", u.SignUp)
 
 	//登录
-	ug.POST("/login", u.Login)
+	ug.POST("/login", u.LoginJWT)
 
 	//登出
 	ug.POST("/logout", u.Logout)

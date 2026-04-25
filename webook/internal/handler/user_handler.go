@@ -4,11 +4,14 @@ import (
 	"Project-WeBook/webook/internal/domain"
 	"Project-WeBook/webook/internal/service"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // UserHandler 用户处理程序,在他上面定义和用户有关系的路由
@@ -101,6 +104,52 @@ func (user *UserHandler) SignUp(ctx *gin.Context) {
 	//成功响应
 	ctx.String(http.StatusOK, "注册成功")
 
+}
+
+// LoginJWT 使用JWT
+func (user *UserHandler) LoginJWT(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req LoginReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	// 校验密码
+	u, err := user.svc.Login(ctx, domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		ctx.String(http.StatusOK, "用户名或密码错误")
+		return
+	}
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误(密码校验)")
+		return
+	}
+
+	// 登录成功
+	claims := UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
+		},
+		UserId: u.Id,
+	}
+	// 设置jwt
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	tokenStr, err := token.SignedString([]byte("9sK7$pR2!zG5&qB8@tN3#mC6%vH1*dJ4"))
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "系统错误")
+		return
+	}
+	ctx.Header("x-jwt-token", tokenStr)
+	fmt.Println(u.Email)
+	ctx.String(http.StatusOK, "登录成功")
+	return
 }
 
 // Login 登陆
@@ -201,9 +250,20 @@ func (user *UserHandler) Edit(ctx *gin.Context) {
 	}
 
 	// 更新数据库
-	session := sessions.Default(ctx)
-	id := session.Get("userId")
-	uid := id.(int64)
+	//session := sessions.Default(ctx)
+	//id := session.Get("userId")
+	userId, ok := ctx.Get("userid")
+	if !ok {
+		// 正常会拿到userid
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	uid, ok := userId.(int64)
+	if !ok {
+		// 断言出问题
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
 	err = user.svc.Edit(ctx, domain.User{
 		Id:        uid,
 		Name:      req.Name,
@@ -222,9 +282,22 @@ func (user *UserHandler) Edit(ctx *gin.Context) {
 func (user *UserHandler) ProFile(ctx *gin.Context) {
 
 	// 查看 id 对应个人信息
-	session := sessions.Default(ctx)
-	id := (session.Get("userId")).(int64)
-	u, err := user.svc.GetProfile(ctx, id)
+	//session := sessions.Default(ctx)
+	//id := (session.Get("userId")).(int64)
+
+	userid, ok := ctx.Get("userId")
+	if !ok {
+		// 正常会拿到userid
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	uid, ok := userid.(int64)
+	if !ok {
+		// 断言出问题
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	u, err := user.svc.GetProfile(ctx, uid)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return
@@ -243,4 +316,14 @@ func (user *UserHandler) ProFile(ctx *gin.Context) {
 		Bio:   u.Biography,
 	})
 
+}
+
+func (user *UserHandler) Test(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "测试成功,你已登录")
+}
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	// 声明要放到token的数据
+	UserId int64
 }
