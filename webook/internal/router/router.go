@@ -37,5 +37,9 @@ func RegisterRoutes(u *handler.UserHandler) *gin.Engine {
 	//用户信息
 	ug.GET("/profile", u.ProFile)
 
+	//测试用
+
+	ug.GET("/test", u.Test)
+
 	return server
 }

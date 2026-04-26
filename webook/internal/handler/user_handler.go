@@ -147,9 +147,7 @@ func (user *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 	ctx.Header("x-jwt-token", tokenStr)
-	fmt.Println(u.Email)
 	ctx.String(http.StatusOK, "登录成功")
-	return
 }
 
 // Login 登陆
@@ -197,7 +195,6 @@ func (user *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 	ctx.String(http.StatusOK, "登录成功")
-	return
 }
 
 // Logout 登出
