@@ -14,6 +14,11 @@ export interface Result<T> {
 
 
 instance.interceptors.response.use(function (resp) {
+    // ==============================================
+    console.log("resp headers", resp.headers);
+    console.log("token", resp.headers["x-jwt-token"]);
+    // ==============================================
+
     const newToken = resp.headers["x-jwt-token"]
     const newRefreshToken = resp.headers["x-refresh-token"]
     if (newToken) {

@@ -4,7 +4,6 @@ import (
 	"Project-WeBook/webook/internal/domain"
 	"Project-WeBook/webook/internal/service"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -137,7 +136,8 @@ func (user *UserHandler) LoginJWT(ctx *gin.Context) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 30)),
 		},
-		UserId: u.Id,
+		UserId:    u.Id,
+		UserAgent: ctx.Request.UserAgent(),
 	}
 	// 设置jwt
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
@@ -325,5 +325,6 @@ func (user *UserHandler) Test(ctx *gin.Context) {
 type UserClaims struct {
 	jwt.RegisteredClaims
 	// 声明要放到token的数据
-	UserId int64
+	UserId    int64
+	UserAgent string
 }
