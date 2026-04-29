@@ -22,6 +22,11 @@ func CORSMiddleware() gin.HandlerFunc {
 			if strings.Contains(origin, "http://localhost") {
 				return true
 			}
+			// k8s 环境
+			if strings.Contains(origin, "webook.test") {
+				return true
+			}
+			// 实际环境
 			return strings.Contains(origin, "yourcompany.com")
 		},
 		MaxAge: 12 * time.Hour,

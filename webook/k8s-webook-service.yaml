@@ -7,7 +7,7 @@ spec:
     app: webook
   ports:
     - protocol: TCP
-      port: 80
+      port: 88
       targetPort: 8082
   type: LoadBalancer
   

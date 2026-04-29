@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webook-ingress
+  namespace: default  # 你的业务 Service 所在的命名空间
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: webook.test      # 自定义域名
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webook # 换成你真实的 Service 名字
+                port:
+                  number: 88         # 换成你 Service 对应的内部端口
