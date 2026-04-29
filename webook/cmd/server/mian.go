@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Project-WeBook/webook/config"
 	"Project-WeBook/webook/internal/handler"
 	"Project-WeBook/webook/internal/repository"
 	"Project-WeBook/webook/internal/repository/dao"
@@ -12,7 +13,7 @@ import (
 )
 
 func main() {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		// panic 相当于整个 goroutine 结束
 		panic(err)
