@@ -2,21 +2,28 @@ package repository
 
 import (
 	"Project-WeBook/webook/internal/domain"
+	"Project-WeBook/webook/internal/repository/cache"
 	"Project-WeBook/webook/internal/repository/dao"
 	"context"
+	"errors"
 )
 
 var (
 	ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
 	ErrUserNotFound       = dao.ErrUserNotFound
+	ErrKeyNotExist        = cache.ErrKeyNotExist
 )
 
 type UserRepository struct {
-	dao *dao.UserDAO
+	dao   *dao.UserDAO
+	cache *cache.UserCache
 }
 
-func NewUserRepository(dao *dao.UserDAO) *UserRepository {
-	return &UserRepository{dao: dao}
+func NewUserRepository(dao *dao.UserDAO, cache *cache.UserCache) *UserRepository {
+	return &UserRepository{
+		dao:   dao,
+		cache: cache,
+	}
 }
 
 // Create 创建用户, 传入 domain 中结构体
@@ -52,14 +59,28 @@ func (r *UserRepository) Edit(ctx context.Context, user domain.User) error {
 }
 
 func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
-	user, err := r.dao.FindByID(ctx, id)
-	if err != nil {
-		return domain.User{}, err
+	u, err := r.cache.Get(ctx, id)
+	if err == nil {
+		return u, nil
 	}
-	return domain.User{
-		Name:      user.Name,
-		Email:     user.Email,
-		Birthday:  user.Birthday,
-		Biography: user.Biography,
-	}, nil
+	// 如果没有数据
+	if errors.Is(err, ErrKeyNotExist) {
+		user, err := r.dao.FindById(ctx, id)
+		if err != nil {
+			return domain.User{}, err
+		}
+		u = domain.User{
+			Name:      user.Name,
+			Email:     user.Email,
+			Birthday:  user.Birthday,
+			Biography: user.Biography,
+		}
+		err = r.cache.Set(ctx, u)
+		if err != nil {
+			// 日志(只是缓存存入失败)
+		}
+		return u, nil
+	}
+
+	return domain.User{}, err
 }

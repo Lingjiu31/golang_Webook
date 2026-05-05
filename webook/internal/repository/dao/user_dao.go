@@ -67,8 +67,8 @@ func (dao *UserDAO) UpDateUser(ctx context.Context, user User) error {
 	return dao.db.WithContext(ctx).Model(&User{}).Where("id = ?", user.Id).Updates(&u).Error
 }
 
-// FindByID 查找个人信息
-func (dao *UserDAO) FindByID(ctx context.Context, id int64) (User, error) {
+// FindById 查找个人信息
+func (dao *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	var user User
 	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 	return user, err
