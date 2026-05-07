@@ -1,8 +1,10 @@
 import axios from "axios";
 import router from "next/router";
+
+const BACKEND_BASE_URL = "http://localhost:8082";
+
 const instance = axios.create({
-    // 这边记得修改你对应的配置文件
-    baseURL:  "http://localhost:8082",
+    baseURL: BACKEND_BASE_URL,
     withCredentials: true
 })
 
@@ -12,13 +14,7 @@ export interface Result<T> {
     data: T,
 }
 
-
 instance.interceptors.response.use(function (resp) {
-    // ==============================================
-    console.log("resp headers", resp.headers);
-    console.log("token", resp.headers["x-jwt-token"]);
-    // ==============================================
-
     const newToken = resp.headers["x-jwt-token"]
     const newRefreshToken = resp.headers["x-refresh-token"]
     if (newToken) {
@@ -27,25 +23,27 @@ instance.interceptors.response.use(function (resp) {
     if (newRefreshToken) {
         localStorage.setItem("refresh_token", newRefreshToken)
     }
-    if (resp.status == 401) {
-        window.location.href="/users/login"
+    if (resp.status === 401) {
+        router.push("/users/login")
     }
     return resp
 }, (err) => {
-    console.log(err)
-    if (err.response.status == 401) {
-        window.location.href="/users/login"
+    console.error(err)
+    if (err.response?.status === 401) {
+        router.push("/users/login")
     }
-    return err
+    return Promise.reject(err)
 })
 
-// 在这里让每一个请求都加上 authorization 的头部
 instance.interceptors.request.use((req) => {
     const token = localStorage.getItem("token")
-    req.headers.setAuthorization("Bearer " + token, true)
+    if (token) {
+        req.headers.setAuthorization("Bearer " + token, true)
+    }
     return req
 }, (err) => {
-    console.log(err)
+    console.error(err)
+    return Promise.reject(err)
 })
 
 export default instance

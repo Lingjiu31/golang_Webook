@@ -1,9 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import axios, {Result} from "@/axios/axios";
-import {Button, Modal, QRCode, Typography} from "antd";
+import {Button, Modal, QRCode, Typography, message} from "antd";
 import {ProLayout} from "@ant-design/pro-components";
 import {EyeOutlined, LikeOutlined, MoneyCollectOutlined, StarOutlined} from "@ant-design/icons";
-import {useSearchParams} from "next/navigation";
+import {useRouter} from "next/router";
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +14,13 @@ interface CodeURL {
 
 
 function Page(){
+    const router = useRouter()
     const [data, setData] = useState<Article>()
     const [openQRCode, setOpenQRCode] = useState(false)
     const [codeURL, setCodeURL] = useState('')
     const [isLoading, setLoading] = useState(false)
-    const params = useSearchParams()
-    // const router = useRouter()
-    // const artID = router.query.id
-    const artID = params?.get('id') || '1'
+    const [rid, setRid] = useState(0)
+    const artID = (router.query.id as string) || '1'
     useEffect(() => {
         setLoading(true)
         axios.get('/articles/pub/'+artID)
@@ -29,6 +28,10 @@ function Page(){
             .then((data) => {
                 setData(data.data)
                 setLoading(false)
+            })
+            .catch((err) => {
+                setLoading(false)
+                message.error(err?.response?.data?.msg || "获取文章失败")
             })
     }, [artID])
 
@@ -43,14 +46,15 @@ function Page(){
             .then((res) => res.data)
             .then((res) => {
                 if(res.code == 0) {
-                    if (data.liked) {
-                        data.likeCnt --
-                    } else {
-                        data.likeCnt ++
-                    }
-                    data.liked = !data.liked
-                    setData(Object.assign({}, data))
+                    setData(prev => prev ? {
+                        ...prev,
+                        liked: !prev.liked,
+                        likeCnt: prev.liked ? prev.likeCnt - 1 : prev.likeCnt + 1
+                    } : prev)
                 }
+            })
+            .catch((err) => {
+                message.error(err?.response?.data?.msg || "操作失败")
             })
     }
 
@@ -60,70 +64,97 @@ function Page(){
         }
         axios.post('/articles/pub/collect', {
             id: parseInt(artID),
-            // 你可以加上增删改查收藏夹的功能，在这里传入收藏夹 ID
             cid: 0,
         })
             .then((res) => res.data)
             .then((res) => {
                 if(res.code == 0) {
-                    data.collectCnt ++
-                    data.collected = !data.collected
-                    setData(Object.assign({}, data))
+                    setData(prev => prev ? {
+                        ...prev,
+                        collected: !prev.collected,
+                        collectCnt: prev.collectCnt + 1
+                    } : prev)
                 }
             })
+            .catch((err) => {
+                message.error(err?.response?.data?.msg || "操作失败")
+            })
     }
-    let rid = 0
     const reward = function () {
         axios.post<Result<CodeURL>>('/articles/pub/reward', {
             id: parseInt(artID),
-            // 固定一分钱
             amt: 1,
         })
             .then((res) => res.data)
             .then((res) => {
                 setCodeURL(res.data.codeURL)
-                rid = res.data.rid
+                setRid(res.data.rid)
                 setOpenQRCode(true)
+            })
+            .catch((err) => {
+                message.error(err?.response?.data?.msg || "操作失败")
             })
     }
 
     const closeModal = () => {
         setOpenQRCode(false)
-        if(rid > 0) {
+        const currentRid = rid
+        if(currentRid > 0) {
             axios.post<Result<string>>('/reward/detail', {
-                rid: rid,
+                rid: currentRid,
             }).then((res) => res.data)
                 .then((res) => {
-                    // 成功了
                     if(res.data == 'RewardStatusPayed') {
-                        alert("打赏成功")
+                        message.success("打赏成功")
                     } else {
                         console.log(res.data)
                     }
+                })
+                .catch((err) => {
+                    message.error(err?.response?.data?.msg || "查询打赏状态失败")
                 })
         }
     }
 
     return (
-        <ProLayout pure={true}>
-            <Typography>
-                <Typography.Title>
-                    {data.title}
-                </Typography.Title>
-                <Typography.Paragraph>
-                    <div dangerouslySetInnerHTML={{__html: data.content}}></div>
-                </Typography.Paragraph>
-            </Typography>
+        <div className="min-h-screen bg-[#ffffff]">
+            <ProLayout pure={true} headerRender={false} menuRender={false}>
+                <div className="max-w-[800px] mx-auto px-4 py-section">
+                    <div className="bg-white rounded-[32px] p-xxl border border-[#dee3e9] mb-xl">
+                        <Typography>
+                            <Typography.Title className="!text-heading-lg !font-optimistic !font-medium !text-ink-deep !mb-6">
+                                {data.title}
+                            </Typography.Title>
+                            <Typography.Paragraph>
+                                <div className="text-body-md text-ink leading-6"
+                                    dangerouslySetInnerHTML={{__html: data.content}}></div>
+                            </Typography.Paragraph>
+                        </Typography>
+                    </div>
 
-            <Modal title="扫描二维码" open={openQRCode} onCancel={closeModal} onOk={closeModal}>
-                <QRCode value={codeURL} size={128} />
-            </Modal>
+                    <div className="flex flex-wrap gap-3">
+                        <Button icon={<EyeOutlined />} type="default" className="!rounded-[100px] !font-bold">
+                            {data.readCnt}
+                        </Button>
+                        <Button onClick={reward} icon={<MoneyCollectOutlined />} type="primary" className="!rounded-[100px]">
+                            打赏一分钱
+                        </Button>
+                        <Button onClick={like} icon={<LikeOutlined style={data.liked? {color: "#e41e3f"}:{}}/>}
+                            type="default" className="!rounded-[100px] !font-bold">
+                            {data.likeCnt}
+                        </Button>
+                        <Button onClick={collect} icon={<StarOutlined style={data.collected? {color: "#f7b928"}:{}}/>}
+                            type="default" className="!rounded-[100px] !font-bold">
+                            {data.collectCnt}
+                        </Button>
+                    </div>
 
-            <Button icon={<EyeOutlined />}>&nbsp;{data.readCnt}</Button>&nbsp;&nbsp;
-            <Button onClick={reward} icon={<MoneyCollectOutlined />}>打赏一分钱</Button>&nbsp;&nbsp;
-            <Button onClick={like} icon={<LikeOutlined style={data.liked? {color: "red"}:{}}/>}>&nbsp;{data.likeCnt}</Button>&nbsp;&nbsp;
-            <Button onClick={collect} icon={<StarOutlined style={data.collected? {color: "red"}:{}}/>}>&nbsp;{data.collectCnt}</Button>
-        </ProLayout>
+                    <Modal title="扫描二维码" open={openQRCode} onCancel={closeModal} onOk={closeModal}>
+                        <QRCode value={codeURL} size={128} />
+                    </Modal>
+                </div>
+            </ProLayout>
+        </div>
     )
 }
 

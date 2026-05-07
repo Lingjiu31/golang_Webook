@@ -214,9 +214,9 @@ func (user *UserHandler) Logout(ctx *gin.Context) {
 // Edit 编辑
 func (user *UserHandler) Edit(ctx *gin.Context) {
 	type EditReq struct {
-		Name      string `json:"name"`
+		Name      string `json:"nickName"`
 		Birthday  string `json:"birthday"`
-		Biography string `json:"biography"`
+		Biography string `json:"aboutMe"`
 	}
 	var req EditReq
 	if err := ctx.Bind(&req); err != nil {
@@ -282,7 +282,7 @@ func (user *UserHandler) ProFile(ctx *gin.Context) {
 	//session := sessions.Default(ctx)
 	//id := (session.Get("userId")).(int64)
 
-	userid, ok := ctx.Get("userId")
+	userid, ok := ctx.Get("userid")
 	if !ok {
 		// 正常会拿到userid
 		ctx.String(http.StatusOK, "系统错误")
@@ -301,16 +301,19 @@ func (user *UserHandler) ProFile(ctx *gin.Context) {
 	}
 
 	type User struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-		Birth string `json:"birth"`
-		Bio   string `json:"bio"`
+		Name  string `json:"NickName"`
+		Email string `json:"Email"`
+		Birth string `json:"Birthday"`
+		Bio   string `json:"AboutMe"`
 	}
-	ctx.JSON(http.StatusOK, User{
-		Name:  u.Name,
-		Email: u.Email,
-		Birth: u.Birthday,
-		Bio:   u.Biography,
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": User{
+			Name:  u.Name,
+			Email: u.Email,
+			Birth: u.Birthday,
+			Bio:   u.Biography,
+		},
 	})
 
 }
